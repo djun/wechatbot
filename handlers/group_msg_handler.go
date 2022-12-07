@@ -33,24 +33,39 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 	group := openwechat.Group{sender}
 	log.Printf("Received Group %v Text Msg : %v", group.NickName, msg.Content)
 
-	if !strings.Contains(msg.Content, "向大兄弟提问") {
+	// 不是@的不处理
+	if !msg.IsAt() {
 		return nil
 	}
-	splitItems := strings.Split(msg.Content, "向大兄弟提问")
-	if len(splitItems) < 2 {
-		return nil
-	}
-	requestText := strings.TrimSpace(splitItems[1])
+
+	// 替换掉@文本，然后向GPT发起请求
+	replaceText := "@" + sender.Self.NickName
+	requestText := strings.TrimSpace(strings.ReplaceAll(msg.Content, replaceText, ""))
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
-		log.Println(err)
+		log.Printf("gtp request error: %v \n", err)
 		msg.ReplyText("机器人神了，我一会发现了就去修。")
 		return err
 	}
+	if reply == "" {
+		return nil
+	}
 
-	_, err = msg.ReplyText(strings.TrimSpace(reply))
-	if err != nil{
-		log.Println(err)
+	// 获取@我的用户
+	groupSender, err := msg.SenderInGroup()
+	if err != nil {
+		log.Printf("get sender in group error :%v \n", err)
+		return err
+	}
+
+	// 回复@我的用户
+	reply = strings.TrimSpace(reply)
+	reply = strings.Trim(reply, "\n")
+	atText := "@" + groupSender.NickName
+	replyText := atText + reply
+	_, err = msg.ReplyText(replyText)
+	if err != nil {
+		log.Printf("response group error: %v \n", err)
 	}
 	return err
 }

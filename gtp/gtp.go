@@ -3,10 +3,13 @@ package gtp
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/869413421/wechatbot/config"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
+
+const BASEURL = "https://api.openai.com/v1/"
 
 // ChatGPTResponseBody 请求体
 type ChatGPTResponseBody struct {
@@ -16,6 +19,9 @@ type ChatGPTResponseBody struct {
 	Model   string                   `json:"model"`
 	Choices []map[string]interface{} `json:"choices"`
 	Usage   map[string]interface{}   `json:"usage"`
+}
+
+type ChoiceItem struct {
 }
 
 // ChatGPTRequestBody 响应体
@@ -29,11 +35,11 @@ type ChatGPTRequestBody struct {
 	PresencePenalty  int     `json:"presence_penalty"`
 }
 
+// Completions gtp文本模型回复
 //curl https://api.openai.com/v1/completions
 //-H "Content-Type: application/json"
 //-H "Authorization: Bearer your chatGPT key"
 //-d '{"model": "text-davinci-003", "prompt": "give me good song", "temperature": 0, "max_tokens": 7}'
-// Completions gtp文本模型回复
 func Completions(msg string) (string, error) {
 	requestBody := ChatGPTRequestBody{
 		Model:            "text-davinci-003",
@@ -47,18 +53,17 @@ func Completions(msg string) (string, error) {
 	requestData, err := json.Marshal(requestBody)
 
 	if err != nil {
-		log.Println(err)
 		return "", err
 	}
 	log.Printf("request gtp json string : %v", string(requestData))
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/completions", bytes.NewBuffer(requestData))
+	req, err := http.NewRequest("POST", BASEURL+"completions", bytes.NewBuffer(requestData))
 	if err != nil {
-		log.Println(err)
 		return "", err
 	}
 
+	apiKey := config.LoadConfig().ApiKey
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer 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")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
@@ -75,7 +80,6 @@ func Completions(msg string) (string, error) {
 	log.Println(string(body))
 	err = json.Unmarshal(body, gptResponseBody)
 	if err != nil {
-		log.Println(err)
 		return "", err
 	}
 	var reply string
