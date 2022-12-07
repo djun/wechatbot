@@ -3,6 +3,8 @@ package gtp
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/869413421/wechatbot/config"
 	"io/ioutil"
 	"log"
@@ -13,15 +15,19 @@ const BASEURL = "https://api.openai.com/v1/"
 
 // ChatGPTResponseBody 请求体
 type ChatGPTResponseBody struct {
-	ID      string                   `json:"id"`
-	Object  string                   `json:"object"`
-	Created int                      `json:"created"`
-	Model   string                   `json:"model"`
-	Choices []map[string]interface{} `json:"choices"`
-	Usage   map[string]interface{}   `json:"usage"`
+	ID      string                 `json:"id"`
+	Object  string                 `json:"object"`
+	Created int                    `json:"created"`
+	Model   string                 `json:"model"`
+	Choices []ChoiceItem           `json:"choices"`
+	Usage   map[string]interface{} `json:"usage"`
 }
 
 type ChoiceItem struct {
+	Text         string `json:"text"`
+	Index        int    `json:"index"`
+	Logprobs     int    `json:"logprobs"`
+	FinishReason string `json:"finish_reason"`
 }
 
 // ChatGPTRequestBody 响应体
@@ -70,7 +76,9 @@ func Completions(msg string) (string, error) {
 		return "", err
 	}
 	defer response.Body.Close()
-
+	if response.StatusCode != 200 {
+		return "", errors.New(fmt.Sprintf("gtp api status code not equals 200,code is %d", response.StatusCode))
+	}
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
@@ -82,12 +90,10 @@ func Completions(msg string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	var reply string
 	if len(gptResponseBody.Choices) > 0 {
-		for _, v := range gptResponseBody.Choices {
-			reply = v["text"].(string)
-			break
-		}
+		reply = gptResponseBody.Choices[0].Text
 	}
 	log.Printf("gpt response text: %s \n", reply)
 	return reply, nil
