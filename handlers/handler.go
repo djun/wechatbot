@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/869413421/wechatbot/config"
+	"github.com/869413421/wechatbot/service"
 	"github.com/eatmoreapple/openwechat"
 	"log"
 )
@@ -21,11 +22,14 @@ const (
 
 // handlers 所有消息类型类型的处理器
 var handlers map[HandlerType]MessageHandlerInterface
+var UserService service.UserServiceInterface
 
 func init() {
 	handlers = make(map[HandlerType]MessageHandlerInterface)
 	handlers[GroupHandler] = NewGroupMessageHandler()
 	handlers[UserHandler] = NewUserMessageHandler()
+
+	UserService = service.NewUserService()
 }
 
 // Handler 全局处理入口

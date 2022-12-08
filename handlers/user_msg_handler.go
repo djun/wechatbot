@@ -32,9 +32,11 @@ func (g *UserMessageHandler) ReplyText(msg *openwechat.Message) error {
 	sender, err := msg.Sender()
 	log.Printf("Received User %v Text Msg : %v", sender.NickName, msg.Content)
 
-	// 向GPT发起请求
+	// 获取上下文，向GPT发起请求
 	requestText := strings.TrimSpace(msg.Content)
 	requestText = strings.Trim(msg.Content, "\n")
+
+	requestText = UserService.GetUserSessionContext(sender.ID()) + requestText
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
 		log.Printf("gtp request error: %v \n", err)
@@ -45,9 +47,10 @@ func (g *UserMessageHandler) ReplyText(msg *openwechat.Message) error {
 		return nil
 	}
 
-	// 回复用户
+	// 设置上下文，回复用户
 	reply = strings.TrimSpace(reply)
 	reply = strings.Trim(reply, "\n")
+	UserService.SetUserSessionContext(sender.ID(), requestText, reply)
 	reply = "本消息由 chatGPT Bot回复：\n" + reply
 	_, err = msg.ReplyText(reply)
 	if err != nil {

@@ -38,12 +38,13 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 		return nil
 	}
 
-	// 替换掉@文本，然后向GPT发起请求
+	// 替换掉@文本，设置会话上下文，然后向GPT发起请求。
 	replaceText := "@" + sender.Self.NickName
 	requestText := strings.TrimSpace(strings.ReplaceAll(msg.Content, replaceText, ""))
 	if requestText == "" {
 		return nil
 	}
+	requestText = UserService.GetUserSessionContext(sender.ID()) + requestText
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
 		log.Printf("gtp request error: %v \n", err)
@@ -67,6 +68,8 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 	// 回复@我的用户
 	reply = strings.TrimSpace(reply)
 	reply = strings.Trim(reply, "\n")
+	// 设置上下文
+	UserService.SetUserSessionContext(sender.ID(), requestText, reply)
 	atText := "@" + groupSender.NickName
 	replyText := atText + reply
 	_, err = msg.ReplyText(replyText)
