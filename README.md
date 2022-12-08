@@ -13,6 +13,7 @@
  * 好友添加自动通过
  
 # 使用前提
+> * 目前只支持在windows上运行因为需要弹窗扫码登录微信，后续会支持linux
 > * 有openai账号，并且创建好api_key，注册事项可以参考[此文章](https://juejin.cn/post/7173447848292253704) 。
 > * 微信必须实名认证。
 
@@ -21,6 +22,7 @@
 > * 请注意收发敏感信息，本项目不做信息过滤。
 
 # 快速开始
+> 非技术人员请直接下载release中的[压缩包](https://github.com/869413421/wechatbot/releases/tag/v1.1.1) ，解压运行。
 ````
 # 获取项目
 git clone https://github.com/869413421/wechatbot.git
