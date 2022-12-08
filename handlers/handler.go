@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/869413421/wechatbot/config"
 	"github.com/869413421/wechatbot/service"
 	"github.com/eatmoreapple/openwechat"
+	"github.com/skip2/go-qrcode"
 	"log"
+	"runtime"
 )
 
 // MessageHandlerInterface 消息处理接口
@@ -20,6 +23,18 @@ const (
 	UserHandler  = "user"
 )
 
+// QrCodeCallBack 登录扫码回调，
+func QrCodeCallBack(uuid string) {
+	if runtime.GOOS == "windows" {
+		// 运行在Windows系统上
+		openwechat.PrintlnQrcodeUrl(uuid)
+	} else {
+		log.Println("login in linux")
+		q, _ := qrcode.New("https://login.weixin.qq.com/l/"+uuid, qrcode.Low)
+		fmt.Println(q.ToString(true))
+	}
+}
+
 // handlers 所有消息类型类型的处理器
 var handlers map[HandlerType]MessageHandlerInterface
 var UserService service.UserServiceInterface
@@ -28,7 +43,6 @@ func init() {
 	handlers = make(map[HandlerType]MessageHandlerInterface)
 	handlers[GroupHandler] = NewGroupMessageHandler()
 	handlers[UserHandler] = NewUserMessageHandler()
-
 	UserService = service.NewUserService()
 }
 
