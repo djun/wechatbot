@@ -35,6 +35,12 @@ copy config.dev.json config.json
 
 # 启动项目
 go run main.go
+
+# linux编译，守护进程运行（可选）
+# 编译
+CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w' -o wechatbot  ./main.go
+# 守护进程运行
+nohup ./wechatbot > run.log &
 ````
 
 # 配置文件说明
