@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
 // Configuration 项目配置
@@ -13,6 +14,8 @@ type Configuration struct {
 	ApiKey string `json:"api_key"`
 	// 自动通过好友
 	AutoPass bool `json:"auto_pass"`
+	// 会话超时时间
+	SessionTimeout time.Duration `json:"session_timeout"`
 }
 
 var config *Configuration
@@ -22,7 +25,9 @@ var once sync.Once
 func LoadConfig() *Configuration {
 	once.Do(func() {
 		// 从文件中读取
-		config = &Configuration{}
+		config = &Configuration{
+			SessionTimeout: 1,
+		}
 		f, err := os.Open("config.json")
 		if err != nil {
 			log.Fatalf("open config err: %v", err)
@@ -39,11 +44,20 @@ func LoadConfig() *Configuration {
 		// 如果环境变量有配置，读取环境变量
 		ApiKey := os.Getenv("ApiKey")
 		AutoPass := os.Getenv("AutoPass")
+		SessionTimeout := os.Getenv("SessionTimeout")
 		if ApiKey != "" {
 			config.ApiKey = ApiKey
 		}
 		if AutoPass == "true" {
 			config.AutoPass = true
+		}
+		if SessionTimeout != "" {
+			duration, err := time.ParseDuration(SessionTimeout)
+			if err != nil {
+				log.Fatalf("config decode session timeout err: %v ,get is %v", err, SessionTimeout)
+				return
+			}
+			config.SessionTimeout = duration
 		}
 	})
 	return config

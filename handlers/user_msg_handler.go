@@ -31,6 +31,13 @@ func (g *UserMessageHandler) ReplyText(msg *openwechat.Message) error {
 	// 接收私聊消息
 	sender, err := msg.Sender()
 	log.Printf("Received User %v Text Msg : %v", sender.NickName, msg.Content)
+	if UserService.ClearUserSessionContext(sender.ID(), msg.Content) {
+		_, err = msg.ReplyText("上下文已经清空了，你可以问下一个问题啦。")
+		if err != nil {
+			log.Printf("response user error: %v \n", err)
+		}
+		return nil
+	}
 
 	// 获取上下文，向GPT发起请求
 	requestText := strings.TrimSpace(msg.Content)
