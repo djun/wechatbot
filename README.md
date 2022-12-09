@@ -35,7 +35,7 @@ $ docker run -itd --name wechatbot -e ApiKey=xxxx -e AutoPass=false -e SessionTi
 $ docker logs -f wechatbot
 ```
 
-其中配置文件参考下边的配置文件说明。
+运行命令中映射的配置文件参考下边的配置文件说明。
 
 `第二种：基于配置文件挂载运行`
 
