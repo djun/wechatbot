@@ -7,6 +7,7 @@
 ![Forks](https://img.shields.io/github/forks/869413421/wechatbot.svg?style=flat-square)
 
 ### 目前实现了以下功能
+ * GPT机器人模型热度可配置
  * 提问增加上下文，更接近官网效果
  * 机器人群聊@回复
  * 机器人私聊回复
@@ -28,11 +29,12 @@
 `第一种：基于环境变量运行`
 
 ```sh
-# 运行项目
-$ docker run -itd --name wechatbot -e ApiKey=xxxx -e AutoPass=false -e SessionTimeout=60s docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+# 运行项目，环境变量参考下方配置说明
+$ docker run -itd --name wechatbot --restart=always -e APIKEY=xxxx -e AUTO_PASS=false -e SESSION_TIMEOUT=60s -e MODEL=text-davinci-003 -e MAX_TOKENS=512 -e TEMPREATURE=0.9 docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
 
 # 查看二维码
-$ docker logs -f wechatbot
+$ docker exec -it wechatbot bash 
+$ tail -f -n 50 /app/run.log 
 ```
 
 运行命令中映射的配置文件参考下边的配置文件说明。
@@ -47,7 +49,8 @@ cp config.dev.json config.json  # 其中 config.dev.json 从项目的根目录�
 docker run -itd --name wechatbot -v ./config.json:/app/config.json docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
 
 # 查看二维码
-$ docker logs -f wechatbot
+$ docker exec -it wechatbot bash 
+$ tail -f -n 50 /app/run.log 
 ```
 
 其中配置文件参考下边的配置文件说明。
@@ -77,14 +80,20 @@ nohup ./wechatbot > run.log &
 # 配置文件说明
 ````
 {
-"api_key": "your api key",
-"auto_pass": true,
-"session_timeout": 60
+  "api_key": "your api key",
+  "auto_pass": false,
+  "session_timeout": 60,
+  "max_tokens": 512,
+  "model": "text-davinci-003",
+  "temperature": 0.9
 }
 
 api_key：openai api_key
 auto_pass:是否自动通过好友添加
 session_timeout：会话超时时间，默认60秒，单位秒，在会话时间内所有发送给机器人的信息会作为上下文。
+max_tokens: GPT响应字符数，最大2048，默认值512。max_tokens会影响接口响应速度，字符越大响应越慢。
+model: GTP选用模型，默认text-davinci-003，具体选项参考官网训练场
+temperature: GTP热度，0到1，默认0.9。数字越大创造力越强，但更偏离训练事实，越低越接近训练事实
 ````
 
 # 使用示例

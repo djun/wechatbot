@@ -1,5 +1,8 @@
 {
   "api_key": "your api key",
-  "auto_pass": true,
-  "session_timeout": 60
+  "auto_pass": false,
+  "session_timeout": 60,
+  "max_tokens": 512,
+  "model": "text-davinci-003",
+  "temperature": 0.9
 }

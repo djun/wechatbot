@@ -30,8 +30,10 @@ func QrCodeCallBack(uuid string) {
 		openwechat.PrintlnQrcodeUrl(uuid)
 	} else {
 		log.Println("login in linux")
-		q, _ := qrcode.New("https://login.weixin.qq.com/l/"+uuid, qrcode.Low)
-		fmt.Println(q.ToString(true))
+		url := "https://login.weixin.qq.com/l/" + uuid
+		log.Printf("如果二维码无法扫描，请尝试请复制链接到浏览器：%s", url)
+		q, _ := qrcode.New(url, qrcode.High)
+		fmt.Println(q.ToSmallString(true))
 	}
 }
 
@@ -48,6 +50,12 @@ func init() {
 
 // Handler 全局处理入口
 func Handler(msg *openwechat.Message) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Printf("handler recover error: %v", err)
+		}
+	}()
 	log.Printf("hadler Received msg : %v", msg.Content)
 	// 处理群消息
 	if msg.IsSendByGroup() {
