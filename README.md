@@ -28,7 +28,11 @@
 `第一种：基于环境变量运行`
 
 ```sh
-docker run -itd --name wechatbot -e ApiKey=xxxx -e AutoPass=false -e SessionTimeout=60 docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+# 运行项目
+$ docker run -itd --name wechatbot -e ApiKey=xxxx -e AutoPass=false -e SessionTimeout=60 docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+
+# 查看二维码
+$ docker logs -f wechatbot
 ```
 
 其中配置文件参考下边的配置文件说明。
@@ -41,6 +45,9 @@ cp config.dev.json config.json  # 其中 config.dev.json 从项目的根目录�
 
 # 运行项目
 docker run -itd --name wechatbot -v ./config.json:/app/config.json docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+
+# 查看二维码
+$ docker logs -f wechatbot
 ```
 
 其中配置文件参考下边的配置文件说明。
