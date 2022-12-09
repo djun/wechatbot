@@ -16,6 +16,12 @@ type Configuration struct {
 	AutoPass bool `json:"auto_pass"`
 	// 会话超时时间
 	SessionTimeout time.Duration `json:"session_timeout"`
+	// GPT请求最大字符数
+	MaxTokens uint `json:"max_tokens"`
+	// GPT模型
+	Model string `json:"model"`
+	// 热度
+	Temperature float32 `json:"temperature"`
 }
 
 var config *Configuration
@@ -26,7 +32,7 @@ func LoadConfig() *Configuration {
 	once.Do(func() {
 		// 从文件中读取
 		config = &Configuration{
-			SessionTimeout: 1,
+			SessionTimeout: 60,
 		}
 		f, err := os.Open("config.json")
 		if err != nil {
