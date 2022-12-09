@@ -5,6 +5,8 @@
 *.so
 *.dylib
 .idea/
+.vscode/
+wechatbot
 storage.json
 
 # Test binary, built with `go test -c`
