@@ -57,5 +57,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           # 给清单打上多个标签
           tags: |
-            eryajf/wechatbot:${{ steps.date.outputs.today }}
-            eryajf/wechatbot:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/wechatbot:${{ steps.date.outputs.today }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/wechatbot:latest
