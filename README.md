@@ -29,7 +29,7 @@
 
 ```sh
 # 运行项目
-$ docker run -itd --name wechatbot -e ApiKey=xxxx -e AutoPass=false -e SessionTimeout=60 docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+$ docker run -itd --name wechatbot -e ApiKey=xxxx -e AutoPass=false -e SessionTimeout=60s docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
 
 # 查看二维码
 $ docker logs -f wechatbot
