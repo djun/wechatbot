@@ -110,7 +110,7 @@ nohup ./wechatbot > run.log &
   "session_timeout": 60,
   "max_tokens": 512,
   "model": "text-davinci-003",
-  "temperature": 0.9
+  "temperature": 0.9,
   "reply_prefix": "来自机器人回复："
 }
 
