@@ -23,6 +23,8 @@ type Configuration struct {
 	Model string `json:"model"`
 	// 热度
 	Temperature float64 `json:"temperature"`
+	// 回复前缀
+	ReplyPrefix string `json:"reply_prefix"`
 }
 
 var config *Configuration
@@ -56,7 +58,6 @@ func LoadConfig() *Configuration {
 				return
 			}
 		}
-		log.Println(config)
 		// 有环境变量使用环境变量
 		ApiKey := os.Getenv("APIKEY")
 		AutoPass := os.Getenv("AUTO_PASS")
@@ -64,7 +65,8 @@ func LoadConfig() *Configuration {
 		Model := os.Getenv("MODEL")
 		MaxTokens := os.Getenv("MAX_TOKENS")
 		Temperature := os.Getenv("TEMPREATURE")
-		if ApiKey != ""  {
+		ReplyPrefix := os.Getenv("REPLY_PREFIX")
+		if ApiKey != "" {
 			config.ApiKey = ApiKey
 		}
 		if AutoPass == "true" {
@@ -97,12 +99,13 @@ func LoadConfig() *Configuration {
 			}
 			config.Temperature = temp
 		}
+		if ReplyPrefix != "" {
+			config.ReplyPrefix = ReplyPrefix
+		}
 	})
-	log.Println(config)
-	if config.ApiKey == ""  {
+	if config.ApiKey == "" {
 		log.Fatalf("config err: api key reqired")
 	}
-
 
 	return config
 }

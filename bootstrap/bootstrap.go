@@ -1,9 +1,10 @@
 package bootstrap
 
 import (
+	"fmt"
 	"github.com/869413421/wechatbot/handlers"
+	"github.com/869413421/wechatbot/pkg/logger"
 	"github.com/eatmoreapple/openwechat"
-	"log"
 )
 
 
@@ -23,10 +24,8 @@ func Run() {
 	// 执行热登录
 	err := bot.HotLogin(reloadStorage)
 	if err != nil {
-		if err = bot.Login(); err != nil {
-			log.Printf("login error: %v \n", err)
-			return
-		}
+		logger.Warning(fmt.Sprintf("login error: %v ", err))
+		return
 	}
 	// 阻塞主goroutine, 直到发生异常或者用户主动退出
 	bot.Block()

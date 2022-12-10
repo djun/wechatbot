@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"github.com/869413421/wechatbot/gtp"
+	"github.com/869413421/wechatbot/pkg/logger"
 	"github.com/eatmoreapple/openwechat"
-	"log"
 	"strings"
 )
 
@@ -31,7 +33,7 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 	// 接收群消息
 	sender, err := msg.Sender()
 	group := openwechat.Group{User: sender}
-	log.Printf("Received Group %v Text Msg : %v", group.NickName, msg.Content)
+	logger.Info(fmt.Sprintf("Received Group %v Text Msg : %v", group.NickName, msg.Content))
 
 	// 不是@的不处理
 	if !msg.IsAt() {
@@ -41,15 +43,14 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 	// 获取@我的用户
 	groupSender, err := msg.SenderInGroup()
 	if err != nil {
-		log.Printf("get sender in group error :%v \n", err)
-		return err
+		return errors.New(fmt.Sprintf("get sender in group error :%v ", err))
 	}
 	atText := "@" + groupSender.NickName + " "
 
 	if UserService.ClearUserSessionContext(sender.ID(), msg.Content) {
 		_, err = msg.ReplyText(atText + "上下文已经清空了，你可以问下一个问题啦。")
 		if err != nil {
-			log.Printf("response user error: %v \n", err)
+			return errors.New(fmt.Sprintf("response user error: %v", err))
 		}
 		return nil
 	}
@@ -61,10 +62,11 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 	}
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
-		log.Printf("gtp request error: %v \n", err)
-		_, err = msg.ReplyText("机器人神了，我一会发现了就去修。")
+		// 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
+		errMsg := fmt.Sprintf("gtp request error: %v", err)
+		_, err = msg.ReplyText(errMsg)
 		if err != nil {
-			log.Printf("response group error: %v \n", err)
+			return errors.New(fmt.Sprintf("response group error: %v ", err))
 		}
 		return err
 	}
@@ -72,17 +74,25 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 		return nil
 	}
 
-	// 回复@我的用户
-	reply = strings.TrimSpace(reply)
-	reply = strings.Trim(reply, "\n")
 	// 设置上下文
 	UserService.SetUserSessionContext(sender.ID(), requestText, reply)
-	replyText := atText + reply
+	replyText := atText + buildGroupReply(reply)
 	_, err = msg.ReplyText(replyText)
 	if err != nil {
-		log.Printf("response group error: %v \n", err)
+		return errors.New(fmt.Sprintf("response group error: %v ", err))
 	}
 	return err
+}
+
+// buildUserReply 构建用户回复
+func buildGroupReply(reply string) string {
+	// 回复@我的用户
+	reply = strings.Trim(strings.Trim(reply, "？"), "\n")
+	if reply == "" {
+		return "请求得不到任何有意义的回复，请具体提出问题。"
+	}
+	reply = strings.Trim(reply, "\n")
+	return reply
 }
 
 // buildRequestText 构建请求GPT的文本，替换掉机器人名称，然后检查是否有上下文，如果有拼接上

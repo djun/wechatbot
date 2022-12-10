@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/869413421/wechatbot/config"
+	"github.com/869413421/wechatbot/pkg/logger"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 const BASEURL = "https://api.openai.com/v1/"
@@ -62,7 +64,7 @@ func Completions(msg string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Printf("request gtp json string : %v", string(requestData))
+	logger.Info(fmt.Sprintf("request gtp json string : %v", string(requestData)))
 	req, err := http.NewRequest("POST", BASEURL+"completions", bytes.NewBuffer(requestData))
 	if err != nil {
 		return "", err
@@ -71,7 +73,7 @@ func Completions(msg string) (string, error) {
 	apiKey := config.LoadConfig().ApiKey
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
-	client := &http.Client{}
+	client := &http.Client{Timeout: 30 * time.Second}
 	response, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -79,13 +81,13 @@ func Completions(msg string) (string, error) {
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(response.Body)
-		log.Println(string(body))
-		return "", errors.New(fmt.Sprintf("gtp api status code not equals 200,code is %d", response.StatusCode))
+		return "", errors.New(fmt.Sprintf("请求GTP出错了，gtp api status code not equals 200,code is %d ,details:  %v ", response.StatusCode, string(body)))
 	}
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
+	logger.Info(fmt.Sprintf("response gtp json string : %v", string(body)))
 
 	gptResponseBody := &ChatGPTResponseBody{}
 	log.Println(string(body))
@@ -98,6 +100,6 @@ func Completions(msg string) (string, error) {
 	if len(gptResponseBody.Choices) > 0 {
 		reply = gptResponseBody.Choices[0].Text
 	}
-	log.Printf("gpt response text: %s \n", reply)
+	logger.Info(fmt.Sprintf("gpt response text: %s ", reply))
 	return reply, nil
 }
