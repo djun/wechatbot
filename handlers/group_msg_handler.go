@@ -47,7 +47,7 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 	}
 	atText := "@" + groupSender.NickName + " "
 
-	if UserService.ClearUserSessionContext(sender.ID(), msg.Content) {
+	if UserService.ClearUserSessionContext(groupSender.ID(), msg.Content) {
 		_, err = msg.ReplyText(atText + "上下文已经清空了，你可以问下一个问题啦。")
 		if err != nil {
 			return errors.New(fmt.Sprintf("response user error: %v", err))
