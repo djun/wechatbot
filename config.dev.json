@@ -1,5 +1,5 @@
 {
-  "api_key": "your api key",
+  "api_key": "api key",
   "auto_pass": true,
   "session_timeout": 60,
   "max_tokens": 512,
@@ -7,5 +7,3 @@
   "temperature": 1,
   "reply_prefix": "来自机器人回复："
 }
-
-
