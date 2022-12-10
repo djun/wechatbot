@@ -22,7 +22,7 @@ func Run() {
 	reloadStorage := openwechat.NewJsonFileHotReloadStorage("storage.json")
 
 	// 执行热登录
-	err := bot.HotLogin(reloadStorage)
+	err := bot.HotLogin(reloadStorage,true)
 	if err != nil {
 		logger.Warning(fmt.Sprintf("login error: %v ", err))
 		return
