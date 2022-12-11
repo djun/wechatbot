@@ -68,7 +68,7 @@ $ tail -f -n 50 /app/run.log
 cp config.dev.json config.json  # 其中 config.dev.json 从项目的根目录获取
 
 # 运行项目
-docker run -itd --name wechatbot -v ./config.json:/app/config.json docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+docker run -itd --name wechatbot -v `pwd`/config.json:/app/config.json docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
 
 # 查看二维码
 $ docker exec -it wechatbot bash 
