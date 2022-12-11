@@ -5,7 +5,7 @@
 
 > `友链：`[chatgpt-dingtalk](https://github.com/eryajf/chatgpt-dingtalk) 本项目可以将GPT机器人集成到钉钉群聊中。
 
-[![Release](https://img.shields.io/github/v/release/869413421/wechatbot.svg?style=flat-square)](https://github.com/869413421/wechatbot/releases/tag/v1.1.2)
+[![Release](https://img.shields.io/github/v/release/869413421/wechatbot.svg?style=flat-square)](https://github.com/869413421/wechatbot/releases/tag/v1.1.3)
 ![Github stars](https://img.shields.io/github/stars/869413421/wechatbot.svg)
 ![Forks](https://img.shields.io/github/forks/869413421/wechatbot.svg?style=flat-square)
 
@@ -52,7 +52,7 @@
 
 ```sh
 # 运行项目，环境变量参考下方配置说明
-$ docker run -itd --name wechatbot --restart=always -e APIKEY=xxxx -e AUTO_PASS=false -e SESSION_TIMEOUT=60s -e MODEL=text-davinci-003 -e MAX_TOKENS=512 -e TEMPREATURE=0.9 -e REPLY_PREFIX=我是来自机器人回复: docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+$ docker run -itd --name wechatbot --restart=always -e APIKEY=换成你的key -e AUTO_PASS=false -e SESSION_TIMEOUT=60s -e MODEL=text-davinci-003 -e MAX_TOKENS=512 -e TEMPREATURE=0.9 -e REPLY_PREFIX=我是来自机器人回复: -e SESSION_CLEAR_TOKEN=下一个问题 docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
 
 # 查看二维码
 $ docker exec -it wechatbot bash 
@@ -79,7 +79,7 @@ $ tail -f -n 50 /app/run.log
 
 # 快速开始
 
-> 非技术人员请直接下载release中的[压缩包](https://github.com/869413421/wechatbot/releases/tag/v1.1.2) ，解压运行。
+> 非技术人员请直接下载release中的[压缩包](https://github.com/869413421/wechatbot/releases/tag/v1.1.3) ，解压运行。
 
 ````
 # 获取项目
@@ -99,6 +99,8 @@ go run main.go
 CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w' -o wechatbot  ./main.go
 # 守护进程运行
 nohup ./wechatbot > run.log &
+# 查看二维码
+# tail -f -n 50 run.log
 ````
 
 # 配置文件说明
@@ -106,12 +108,13 @@ nohup ./wechatbot > run.log &
 ````
 {
   "api_key": "your api key",
-  "auto_pass": false,
+  "auto_pass": true,
   "session_timeout": 60,
-  "max_tokens": 512,
+  "max_tokens": 1024,
   "model": "text-davinci-003",
-  "temperature": 0.9,
-  "reply_prefix": "来自机器人回复："
+  "temperature": 1,
+  "reply_prefix": "来自机器人回复：",
+  "session_clear_token": "清空会话"
 }
 
 api_key：openai api_key
@@ -121,11 +124,12 @@ max_tokens: GPT响应字符数，最大2048，默认值512。max_tokens会影响
 model: GPT选用模型，默认text-davinci-003，具体选项参考官网训练场
 temperature: GPT热度，0到1，默认0.9。数字越大创造力越强，但更偏离训练事实，越低越接近训练事实
 reply_prefix: 私聊回复前缀
+session_clear_token: 会话清空口令，默认`下一个问题`
 ````
 
 # 使用示例
 
-### 向机器人发送`我要问下一个问题`，清空会话信息。
+### 向机器人发送`下一个问题`，清空会话信息。
 
 ### 私聊
 
@@ -135,9 +139,4 @@ reply_prefix: 私聊回复前缀
 
 <img width="300px" src="https://raw.githubusercontent.com/869413421/study/master/static/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20221208153015.jpg"/>
 
-### 添加微信（备注: wechabot）进群交流
-
-**如果二维码图片没显示出来，请添加微信号 huangyanming681925**
-
-<img width="210px"  src="https://raw.githubusercontent.com/869413421/study/master/static/qr.png" align="left">
 

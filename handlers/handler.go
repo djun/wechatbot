@@ -4,25 +4,22 @@ import (
 	"fmt"
 	"github.com/869413421/wechatbot/config"
 	"github.com/869413421/wechatbot/pkg/logger"
-	"github.com/869413421/wechatbot/service"
 	"github.com/eatmoreapple/openwechat"
+	"github.com/patrickmn/go-cache"
 	"github.com/skip2/go-qrcode"
 	"log"
 	"runtime"
+	"strings"
+	"time"
 )
+
+var c = cache.New(config.LoadConfig().SessionTimeout, time.Minute*5)
 
 // MessageHandlerInterface 消息处理接口
 type MessageHandlerInterface interface {
-	handle(*openwechat.Message) error
-	ReplyText(*openwechat.Message) error
+	handle() error
+	ReplyText() error
 }
-
-type HandlerType string
-
-const (
-	GroupHandler = "group"
-	UserHandler  = "user"
-)
 
 // QrCodeCallBack 登录扫码回调，
 func QrCodeCallBack(uuid string) {
@@ -32,21 +29,10 @@ func QrCodeCallBack(uuid string) {
 	} else {
 		log.Println("login in linux")
 		url := "https://login.weixin.qq.com/l/" + uuid
-		log.Printf("如果二维码无法扫描，请尝试请复制链接到浏览器：%s", url)
+		log.Printf("如果二维码无法扫描，请缩小控制台尺寸，或更换命令行工具，缩小二维码像素")
 		q, _ := qrcode.New(url, qrcode.High)
 		fmt.Println(q.ToSmallString(true))
 	}
-}
-
-// handlers 所有消息类型类型的处理器
-var handlers map[HandlerType]MessageHandlerInterface
-var UserService service.UserServiceInterface
-
-func init() {
-	handlers = make(map[HandlerType]MessageHandlerInterface)
-	handlers[GroupHandler] = NewGroupMessageHandler()
-	handlers[UserHandler] = NewUserMessageHandler()
-	UserService = service.NewUserService()
 }
 
 // Handler 全局处理入口
@@ -58,9 +44,36 @@ func Handler(msg *openwechat.Message) {
 		}
 	}()
 
+	// 清空会话
+	if strings.Contains(msg.Content, config.LoadConfig().SessionClearToken) {
+		// 获取口令消息处理器
+		handler, err := NewTokenMessageHandler(msg)
+		if err != nil {
+			logger.Warning(fmt.Sprintf("init token message handler error: %s", err))
+		}
+
+		// 获取口令消息处理器
+		err = handler.handle()
+		if err != nil {
+			logger.Warning(fmt.Sprintf("handle token message error: %s", err))
+		}
+		return
+	}
+
 	// 处理群消息
 	if msg.IsSendByGroup() {
-		handlers[GroupHandler].handle(msg)
+		// 获取用户消息处理器
+		handler, err := NewGroupMessageHandler(msg)
+		if err != nil {
+			logger.Warning(fmt.Sprintf("init group message handler error: %s", err))
+			return
+		}
+
+		// 处理用户消息
+		err = handler.handle()
+		if err != nil {
+			logger.Warning(fmt.Sprintf("handle group message error: %s", err))
+		}
 		return
 	}
 
@@ -76,5 +89,16 @@ func Handler(msg *openwechat.Message) {
 	}
 
 	// 私聊
-	handlers[UserHandler].handle(msg)
+	// 获取用户消息处理器
+	handler, err := NewUserMessageHandler(msg)
+	if err != nil {
+		logger.Warning(fmt.Sprintf("init user message handler error: %s", err))
+	}
+
+	// 处理用户消息
+	err = handler.handle()
+	if err != nil {
+		logger.Warning(fmt.Sprintf("handle user message error: %s", err))
+	}
+	return
 }

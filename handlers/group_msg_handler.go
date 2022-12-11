@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/869413421/wechatbot/gtp"
 	"github.com/869413421/wechatbot/pkg/logger"
+	"github.com/869413421/wechatbot/service"
 	"github.com/eatmoreapple/openwechat"
 	"strings"
 )
@@ -13,95 +14,133 @@ var _ MessageHandlerInterface = (*GroupMessageHandler)(nil)
 
 // GroupMessageHandler 群消息处理
 type GroupMessageHandler struct {
+	// 获取自己
+	self *openwechat.Self
+	// 群
+	group *openwechat.Group
+	// 接收到消息
+	msg *openwechat.Message
+	// 发送的用户
+	sender *openwechat.User
+	// 实现的用户业务
+	service service.UserServiceInterface
+}
+
+// NewGroupMessageHandler 创建群消息处理器
+func NewGroupMessageHandler(msg *openwechat.Message) (MessageHandlerInterface, error) {
+	sender, err := msg.Sender()
+	if err != nil {
+		return nil, err
+	}
+	group := &openwechat.Group{User: sender}
+	groupSender, err := msg.SenderInGroup()
+	if err != nil {
+		return nil, err
+	}
+
+	userService := service.NewUserService(c, groupSender)
+	handler := &GroupMessageHandler{
+		self:    sender.Self,
+		msg:     msg,
+		group:   group,
+		sender:  groupSender,
+		service: userService,
+	}
+	return handler, nil
+
 }
 
 // handle 处理消息
-func (g *GroupMessageHandler) handle(msg *openwechat.Message) error {
-	if msg.IsText() {
-		return g.ReplyText(msg)
+func (g *GroupMessageHandler) handle() error {
+	if g.msg.IsText() {
+		return g.ReplyText()
 	}
 	return nil
 }
 
-// NewGroupMessageHandler 创建群消息处理器
-func NewGroupMessageHandler() MessageHandlerInterface {
-	return &GroupMessageHandler{}
-}
-
 // ReplyText 发送文本消息到群
-func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
-	// 接收群消息
-	sender, err := msg.Sender()
-	group := openwechat.Group{User: sender}
-	logger.Info(fmt.Sprintf("Received Group %v Text Msg : %v", group.NickName, msg.Content))
-
-	// 不是@的不处理
-	if !msg.IsAt() {
+func (g *GroupMessageHandler) ReplyText() error {
+	logger.Info(fmt.Sprintf("Received Group %v Text Msg : %v", g.group.NickName, g.msg.Content))
+	// 1.不是@的不处理
+	if !g.msg.IsAt() {
 		return nil
 	}
 
-	// 获取@我的用户
-	groupSender, err := msg.SenderInGroup()
-	if err != nil {
-		return errors.New(fmt.Sprintf("get sender in group error :%v ", err))
-	}
-	atText := "@" + groupSender.NickName + " "
-
-	if UserService.ClearUserSessionContext(groupSender.ID(), msg.Content) {
-		_, err = msg.ReplyText(atText + "上下文已经清空了，你可以问下一个问题啦。")
-		if err != nil {
-			return errors.New(fmt.Sprintf("response user error: %v", err))
-		}
-		return nil
-	}
-
-	// 替换掉@文本，设置会话上下文，然后向GPT发起请求。
-	requestText := buildRequestText(sender, msg)
+	// 2.获取请求的文本，如果为空字符串不处理
+	requestText := g.getRequestText()
 	if requestText == "" {
+		logger.Info("user message is null")
 		return nil
 	}
+
+	// 3.请求GPT获取回复
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
-		// 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
+		// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
 		errMsg := fmt.Sprintf("gtp request error: %v", err)
-		_, err = msg.ReplyText(errMsg)
+		_, err = g.msg.ReplyText(errMsg)
 		if err != nil {
 			return errors.New(fmt.Sprintf("response group error: %v ", err))
 		}
 		return err
 	}
-	if reply == "" {
-		return nil
+
+	// 4.设置上下文，并响应信息给用户
+	selfName := "@" + g.self.NickName
+	question := strings.ReplaceAll(g.msg.Content, selfName, "")
+	g.service.SetUserSessionContext(question, reply)
+	_, err = g.msg.ReplyText(g.buildReplyText(reply))
+	if err != nil {
+		return errors.New(fmt.Sprintf("response user error: %v ", err))
 	}
 
-	// 设置上下文
-	UserService.SetUserSessionContext(sender.ID(), requestText, reply)
-	replyText := atText + buildGroupReply(reply)
-	_, err = msg.ReplyText(replyText)
-	if err != nil {
-		return errors.New(fmt.Sprintf("response group error: %v ", err))
-	}
+	// 5.返回错误信息
 	return err
 }
 
-// buildUserReply 构建用户回复
-func buildGroupReply(reply string) string {
-	// 回复@我的用户
-	reply = strings.Trim(strings.Trim(reply, "？"), "\n")
-	if reply == "" {
-		return "请求得不到任何有意义的回复，请具体提出问题。"
-	}
-	reply = strings.Trim(reply, "\n")
-	return reply
-}
+// getRequestText 获取请求接口的文本，要做一些清洗
+func (g *GroupMessageHandler) getRequestText() string {
+	// 1.去除空格以及换行
+	requestText := strings.TrimSpace(g.msg.Content)
+	requestText = strings.Trim(g.msg.Content, "\n")
 
-// buildRequestText 构建请求GPT的文本，替换掉机器人名称，然后检查是否有上下文，如果有拼接上
-func buildRequestText(sender *openwechat.User, msg *openwechat.Message) string {
-	replaceText := "@" + sender.Self.NickName
-	requestText := strings.TrimSpace(strings.ReplaceAll(msg.Content, replaceText, ""))
+	// 2.替换掉当前用户名称
+	replaceText := "@" + g.self.NickName
+	requestText = strings.TrimSpace(strings.ReplaceAll(g.msg.Content, replaceText, ""))
 	if requestText == "" {
 		return ""
 	}
-	requestText = UserService.GetUserSessionContext(sender.ID()) + requestText
+
+	// 3.获取上下文，拼接在一起，如果字符长度超出4000，截取为4000。（GPT按字符长度算）
+	requestText = g.service.GetUserSessionContext() + requestText
+	if len(requestText) >= 4000 {
+		requestText = requestText[:4000]
+	}
+
+	// 4.返回请求文本
 	return requestText
+}
+
+// buildReply 构建回复文本
+func (g *GroupMessageHandler) buildReplyText(reply string) string {
+	// 1.获取@我的用户
+	atText := "@" + g.sender.NickName
+	textSplit := strings.Split(reply, "\n\n")
+	if len(textSplit) > 1 {
+		trimText := textSplit[0]
+		reply = strings.Trim(reply, trimText)
+	}
+	reply = strings.TrimSpace(reply)
+	if reply == "" {
+		return atText + " 请求得不到任何有意义的回复，请具体提出问题。"
+	}
+
+	// 2.拼接回复,@我的用户，问题，回复
+	replaceText := "@" + g.self.NickName
+	question := strings.TrimSpace(strings.ReplaceAll(g.msg.Content, replaceText, ""))
+	reply = atText + "\n" + question + "\n --------------------------------\n" + reply
+	reply = strings.Trim(reply, "\n")
+
+	// 3.返回回复的内容
+	return reply
 }

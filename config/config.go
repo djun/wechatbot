@@ -2,6 +2,8 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/869413421/wechatbot/pkg/logger"
 	"log"
 	"os"
 	"strconv"
@@ -25,6 +27,8 @@ type Configuration struct {
 	Temperature float64 `json:"temperature"`
 	// 回复前缀
 	ReplyPrefix string `json:"reply_prefix"`
+	// 清空会话口令
+	SessionClearToken string `json:"session_clear_token"`
 }
 
 var config *Configuration
@@ -35,11 +39,12 @@ func LoadConfig() *Configuration {
 	once.Do(func() {
 		// 给配置赋默认值
 		config = &Configuration{
-			AutoPass:       false,
-			SessionTimeout: 60,
-			MaxTokens:      512,
-			Model:          "text-davinci-003",
-			Temperature:    0.9,
+			AutoPass:          false,
+			SessionTimeout:    60,
+			MaxTokens:         512,
+			Model:             "text-davinci-003",
+			Temperature:       0.9,
+			SessionClearToken: "下一个问题",
 		}
 
 		// 判断配置文件是否存在，存在直接JSON读取
@@ -66,6 +71,7 @@ func LoadConfig() *Configuration {
 		MaxTokens := os.Getenv("MAX_TOKENS")
 		Temperature := os.Getenv("TEMPREATURE")
 		ReplyPrefix := os.Getenv("REPLY_PREFIX")
+		SessionClearToken := os.Getenv("SESSION_CLEAR_TOKEN")
 		if ApiKey != "" {
 			config.ApiKey = ApiKey
 		}
@@ -75,7 +81,7 @@ func LoadConfig() *Configuration {
 		if SessionTimeout != "" {
 			duration, err := time.ParseDuration(SessionTimeout)
 			if err != nil {
-				log.Fatalf("config session timeout err: %v ,get is %v", err, SessionTimeout)
+				logger.Danger(fmt.Sprintf("config session timeout err: %v ,get is %v", err, SessionTimeout))
 				return
 			}
 			config.SessionTimeout = duration
@@ -86,7 +92,7 @@ func LoadConfig() *Configuration {
 		if MaxTokens != "" {
 			max, err := strconv.Atoi(MaxTokens)
 			if err != nil {
-				log.Fatalf("config MaxTokens err: %v ,get is %v", err, MaxTokens)
+				logger.Danger(fmt.Sprintf("config MaxTokens err: %v ,get is %v", err, MaxTokens))
 				return
 			}
 			config.MaxTokens = uint(max)
@@ -94,7 +100,7 @@ func LoadConfig() *Configuration {
 		if Temperature != "" {
 			temp, err := strconv.ParseFloat(Temperature, 64)
 			if err != nil {
-				log.Fatalf("config Temperature err: %v ,get is %v", err, Temperature)
+				logger.Danger(fmt.Sprintf("config Temperature err: %v ,get is %v", err, Temperature))
 				return
 			}
 			config.Temperature = temp
@@ -102,9 +108,12 @@ func LoadConfig() *Configuration {
 		if ReplyPrefix != "" {
 			config.ReplyPrefix = ReplyPrefix
 		}
+		if SessionClearToken != "" {
+			config.SessionClearToken = SessionClearToken
+		}
 	})
 	if config.ApiKey == "" {
-		log.Fatalf("config err: api key reqired")
+		logger.Danger("config err: api key required")
 	}
 
 	return config
