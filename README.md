@@ -79,7 +79,24 @@ $ tail -f -n 50 /app/run.log
 
 # 快速开始
 
-> 非技术人员请直接下载release中的[压缩包](https://github.com/869413421/wechatbot/releases/tag/v1.1.3) ，解压运行。
+`第一种：直接下载二进制(适合对编程不了解的同学)`
+
+> 非技术人员请直接下载release中的[压缩包](https://github.com/869413421/wechatbot/releases) ，请根据自己系统以及架构选择合适的压缩包，下载之后直接解压运行。
+
+下载之后，在本地解压，即可看到可执行程序，与配置文件：
+
+```
+$ tar xf wechatbot-v0.0.2-darwin-arm64.tar.gz
+$ cd wechatbot-v0.0.2-darwin-arm64
+$ cp config.dev.json # 根据情况调整配置文件内容
+$ ./wechatbot  # 直接运行
+
+# 如果要守护在后台运行
+$ nohup ./wechatbot &> run.log &
+$ tail -f run.log
+```
+
+`第二种：基于源码运行(适合了解go语言编程的同学)`
 
 ````
 # 获取项目
@@ -98,7 +115,7 @@ go run main.go
 # 编译
 CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w' -o wechatbot  ./main.go
 # 守护进程运行
-nohup ./wechatbot > run.log &
+nohup ./wechatbot &> run.log &
 # 查看二维码
 # tail -f -n 50 run.log
 ````
@@ -138,5 +155,4 @@ session_clear_token: 会话清空口令，默认`下一个问题`
 ### 群聊@回复
 
 <img width="300px" src="https://raw.githubusercontent.com/869413421/study/master/static/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20221208153015.jpg"/>
-
 
