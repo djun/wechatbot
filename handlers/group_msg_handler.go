@@ -86,9 +86,7 @@ func (g *GroupMessageHandler) ReplyText() error {
 	}
 
 	// 4.设置上下文，并响应信息给用户
-	selfName := "@" + g.self.NickName
-	question := strings.ReplaceAll(g.msg.Content, selfName, "")
-	g.service.SetUserSessionContext(question, reply)
+	g.service.SetUserSessionContext(requestText, reply)
 	_, err = g.msg.ReplyText(g.buildReplyText(reply))
 	if err != nil {
 		return errors.New(fmt.Sprintf("response user error: %v ", err))
@@ -111,13 +109,24 @@ func (g *GroupMessageHandler) getRequestText() string {
 		return ""
 	}
 
-	// 3.获取上下文，拼接在一起，如果字符长度超出4000，截取为4000。（GPT按字符长度算）
-	requestText = g.service.GetUserSessionContext() + requestText
+	// 3.获取上下文，拼接在一起，如果字符长度超出4000，截取为4000。（GPT按字符长度算），达芬奇3最大为4068，也许后续为了适应要动态进行判断。
+	sessionText := g.service.GetUserSessionContext()
+	if sessionText != "" {
+		requestText = sessionText + "\n" + requestText
+	}
 	if len(requestText) >= 4000 {
 		requestText = requestText[:4000]
 	}
 
-	// 4.返回请求文本
+	// 4.检查用户发送文本是否包含结束标点符号
+	punctuation := ",.;!?，。！？、…"
+	runeRequestText := []rune(requestText)
+	lastChar := string(runeRequestText[len(runeRequestText)-1:])
+	if strings.Index(punctuation, lastChar) < 0 {
+		requestText = requestText + "？" // 判断最后字符是否加了标点，没有的话加上句号，避免openai自动补齐引起混乱。
+	}
+
+	// 5.返回请求文本
 	return requestText
 }
 

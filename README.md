@@ -31,7 +31,7 @@
 * 其他无法登录问题，依然尝试删除掉storage.json文件重新登录。
 * ~~机器人无法正常回复，检查ApiKey能否正常使用，控制台日志中有详细错误信息~~ 新版本会机器人会直接输出，因为被问得好烦了。
 * linux中二维码无法扫描，缩小命令行功能，让二维码像素尽可能清晰。（无法从代码层面解决）
-* 机器人一直答非所问，可能因为上下文累积过多。切换不同问题时，发送指令：我要问下一个问题。会清空上下文
+* 机器人一直答非所问，可能因为上下文累积过多。切换不同问题时，发送指令：启动时配置的`session_clear_token`字段。会清空上下文
 
 # 使用前提
 
@@ -52,7 +52,16 @@
 
 ```sh
 # 运行项目，环境变量参考下方配置说明
-$ docker run -itd --name wechatbot --restart=always -e APIKEY=换成你的key -e AUTO_PASS=false -e SESSION_TIMEOUT=60s -e MODEL=text-davinci-003 -e MAX_TOKENS=512 -e TEMPREATURE=0.9 -e REPLY_PREFIX=我是来自机器人回复: -e SESSION_CLEAR_TOKEN=下一个问题 docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+$ docker run -itd --name wechatbot --restart=always \
+ -e APIKEY=换成你的key \
+ -e AUTO_PASS=false \
+ -e SESSION_TIMEOUT=60s \
+ -e MODEL=text-davinci-003 \
+ -e MAX_TOKENS=512 \
+ -e TEMPREATURE=0.9 \
+ -e REPLY_PREFIX=我是来自机器人回复: \
+ -e SESSION_CLEAR_TOKEN=下一个问题 \
+ docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
 
 # 查看二维码
 $ docker exec -it wechatbot bash 
@@ -65,10 +74,10 @@ $ tail -f -n 50 /app/run.log
 
 ```sh
 # 复制配置文件，根据自己实际情况，调整配置里的内容
-cp config.dev.json config.json  # 其中 config.dev.json 从项目的根目录获取
+$ cp config.dev.json config.json  # 其中 config.dev.json 从项目的根目录获取
 
 # 运行项目
-docker run -itd --name wechatbot -v `pwd`/config.json:/app/config.json docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
+$ docker run -itd --name wechatbot -v `pwd`/config.json:/app/config.json docker.mirrors.sjtug.sjtu.edu.cn/qingshui869413421/wechatbot:latest
 
 # 查看二维码
 $ docker exec -it wechatbot bash 
@@ -87,8 +96,8 @@ $ tail -f -n 50 /app/run.log
 
 ```
 # windows
-1.下载exe
-2.复制代码中config.dev.json更改为config.json
+1.下载压缩包解压
+2.复制文件中config.dev.json更改为config.json
 3.将config.json中的api_key替换为自己的
 4.双击exe，扫码登录
 

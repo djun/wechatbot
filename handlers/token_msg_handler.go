@@ -48,6 +48,9 @@ func (t *TokenMessageHandler) ReplyText() error {
 	t.service.ClearUserSessionContext()
 	var err error
 	if t.msg.IsComeFromGroup() {
+		if !t.msg.IsAt() {
+			return err
+		}
 		atText := "@" + t.sender.NickName + "上下文已经清空，请问下一个问题。"
 		_, err = t.msg.ReplyText(atText)
 	} else {

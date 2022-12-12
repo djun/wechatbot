@@ -70,7 +70,7 @@ func (h *UserMessageHandler) ReplyText() error {
 	}
 
 	// 2.设置上下文，回复用户
-	h.service.SetUserSessionContext(h.msg.Content, reply)
+	h.service.SetUserSessionContext(requestText, reply)
 	_, err = h.msg.ReplyText(buildUserReply(reply))
 	if err != nil {
 		return errors.New(fmt.Sprintf("response user error: %v ", err))
@@ -83,16 +83,27 @@ func (h *UserMessageHandler) ReplyText() error {
 // getRequestText 获取请求接口的文本，要做一些清晰
 func (h *UserMessageHandler) getRequestText() string {
 	// 1.去除空格以及换行
-	text := strings.TrimSpace(h.msg.Content)
-	text = strings.Trim(h.msg.Content, "\n")
+	requestText := strings.TrimSpace(h.msg.Content)
+	requestText = strings.Trim(h.msg.Content, "\n")
 
-	// 2.获取上下文，拼接在一起，如果字符长度超出4000，截取为4000。（GPT按字符长度算）
-	requestText := h.service.GetUserSessionContext() + text
+	// 2.获取上下文，拼接在一起，如果字符长度超出4000，截取为4000。（GPT按字符长度算），达芬奇3最大为4068，也许后续为了适应要动态进行判断。
+	sessionText := h.service.GetUserSessionContext()
+	if sessionText != "" {
+		requestText = sessionText + "\n" + requestText
+	}
 	if len(requestText) >= 4000 {
 		requestText = requestText[:4000]
 	}
 
-	// 3.返回请求文本
+	// 3.检查用户发送文本是否包含结束标点符号
+	punctuation := ",.;!?，。！？、…"
+	runeRequestText := []rune(requestText)
+	lastChar := string(runeRequestText[len(runeRequestText)-1:])
+	if strings.Index(punctuation, lastChar) < 0 {
+		requestText = requestText + "？" // 判断最后字符是否加了标点，没有的话加上句号，避免openai自动补齐引起混乱。
+	}
+
+	// 4.返回请求文本
 	return requestText
 }
 
