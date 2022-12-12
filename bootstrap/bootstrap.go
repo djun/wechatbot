@@ -7,13 +7,17 @@ import (
 	"github.com/eatmoreapple/openwechat"
 )
 
-
 func Run() {
 	//bot := openwechat.DefaultBot()
 	bot := openwechat.DefaultBot(openwechat.Desktop) // 桌面模式，上面登录不上的可以尝试切换这种模式
 
 	// 注册消息处理函数
-	bot.MessageHandler = handlers.Handler
+	handler, err := handlers.NewHandler()
+	if err != nil {
+		logger.Danger("register error: %v", err)
+		return
+	}
+	bot.MessageHandler = handler
 
 	// 注册登陆二维码回调
 	bot.UUIDCallback = handlers.QrCodeCallBack
@@ -22,7 +26,7 @@ func Run() {
 	reloadStorage := openwechat.NewJsonFileHotReloadStorage("storage.json")
 
 	// 执行热登录
-	err := bot.HotLogin(reloadStorage,true)
+	err = bot.HotLogin(reloadStorage, true)
 	if err != nil {
 		logger.Warning(fmt.Sprintf("login error: %v ", err))
 		return
