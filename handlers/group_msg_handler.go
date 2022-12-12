@@ -3,7 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/869413421/wechatbot/gtp"
+	"github.com/869413421/wechatbot/gpt"
 	"github.com/869413421/wechatbot/pkg/logger"
 	"github.com/869413421/wechatbot/service"
 	"github.com/eatmoreapple/openwechat"
@@ -74,10 +74,10 @@ func (g *GroupMessageHandler) ReplyText() error {
 	}
 
 	// 3.请求GPT获取回复
-	reply, err := gtp.Completions(requestText)
+	reply, err := gpt.Completions(requestText)
 	if err != nil {
 		// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
-		errMsg := fmt.Sprintf("gtp request error: %v", err)
+		errMsg := fmt.Sprintf("gpt request error: %v", err)
 		_, err = g.msg.ReplyText(errMsg)
 		if err != nil {
 			return errors.New(fmt.Sprintf("response group error: %v ", err))

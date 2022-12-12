@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/869413421/wechatbot/config"
-	"github.com/869413421/wechatbot/gtp"
+	"github.com/869413421/wechatbot/gpt"
 	"github.com/869413421/wechatbot/pkg/logger"
 	"github.com/869413421/wechatbot/service"
 	"github.com/eatmoreapple/openwechat"
@@ -58,10 +58,10 @@ func (h *UserMessageHandler) ReplyText() error {
 	}
 
 	// 2.向GPT发起请求，如果回复文本等于空,不回复
-	reply, err := gtp.Completions(h.getRequestText())
+	reply, err := gpt.Completions(h.getRequestText())
 	if err != nil {
 		// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
-		errMsg := fmt.Sprintf("gtp request error: %v", err)
+		errMsg := fmt.Sprintf("gpt request error: %v", err)
 		_, err = h.msg.ReplyText(errMsg)
 		if err != nil {
 			return errors.New(fmt.Sprintf("response user error: %v ", err))

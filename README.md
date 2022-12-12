@@ -13,7 +13,7 @@
 
 * GPT机器人模型热度可配置
 * 提问增加上下文
-* 指令清空上下文（指令：我要问下一个问题）
+* 指令清空上下文（指令：根据配置）
 * 机器人群聊@回复
 * 机器人私聊回复
 * 私聊回复前缀设置
@@ -86,6 +86,13 @@ $ tail -f -n 50 /app/run.log
 下载之后，在本地解压，即可看到可执行程序，与配置文件：
 
 ```
+# windows
+1.下载exe
+2.复制代码中config.dev.json更改为config.json
+3.将config.json中的api_key替换为自己的
+4.双击exe，扫码登录
+
+# linux
 $ tar xf wechatbot-v0.0.2-darwin-arm64.tar.gz
 $ cd wechatbot-v0.0.2-darwin-arm64
 $ cp config.dev.json # 根据情况调整配置文件内容
@@ -100,24 +107,16 @@ $ tail -f run.log
 
 ````
 # 获取项目
-git clone https://github.com/869413421/wechatbot.git
+$ git clone https://github.com/869413421/wechatbot.git
 
 # 进入项目目录
-cd wechatbot
+$ cd wechatbot
 
 # 复制配置文件
-copy config.dev.json config.json
+$ copy config.dev.json config.json
 
 # 启动项目
-go run main.go
-
-# linux编译，守护进程运行（可选）
-# 编译
-CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w' -o wechatbot  ./main.go
-# 守护进程运行
-nohup ./wechatbot &> run.log &
-# 查看二维码
-# tail -f -n 50 run.log
+$ go run main.go
 ````
 
 # 配置文件说明
@@ -145,9 +144,6 @@ session_clear_token: 会话清空口令，默认`下一个问题`
 ````
 
 # 使用示例
-
-### 向机器人发送`下一个问题`，清空会话信息。
-
 ### 私聊
 
 <img width="300px" src="https://raw.githubusercontent.com/869413421/study/master/static/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20221208153022.jpg"/>

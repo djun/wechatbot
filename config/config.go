@@ -13,7 +13,7 @@ import (
 
 // Configuration 项目配置
 type Configuration struct {
-	// gtp apikey
+	// gpt apikey
 	ApiKey string `json:"api_key"`
 	// 自动通过好友
 	AutoPass bool `json:"auto_pass"`

@@ -1,4 +1,4 @@
-package gtp
+package gpt
 
 import (
 	"bytes"
@@ -64,7 +64,7 @@ func Completions(msg string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	logger.Info(fmt.Sprintf("request gtp json string : %v", string(requestData)))
+	logger.Info(fmt.Sprintf("request gpt json string : %v", string(requestData)))
 	req, err := http.NewRequest("POST", BASEURL+"completions", bytes.NewBuffer(requestData))
 	if err != nil {
 		return "", err
@@ -81,13 +81,13 @@ func Completions(msg string) (string, error) {
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(response.Body)
-		return "", errors.New(fmt.Sprintf("请求GTP出错了，gtp api status code not equals 200,code is %d ,details:  %v ", response.StatusCode, string(body)))
+		return "", errors.New(fmt.Sprintf("请求GTP出错了，gpt api status code not equals 200,code is %d ,details:  %v ", response.StatusCode, string(body)))
 	}
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
-	logger.Info(fmt.Sprintf("response gtp json string : %v", string(body)))
+	logger.Info(fmt.Sprintf("response gpt json string : %v", string(body)))
 
 	gptResponseBody := &ChatGPTResponseBody{}
 	log.Println(string(body))
