@@ -26,6 +26,24 @@ type GroupMessageHandler struct {
 	service service.UserServiceInterface
 }
 
+func GroupMessageContextHandler() func(ctx *openwechat.MessageContext) {
+	return func(ctx *openwechat.MessageContext) {
+		msg := ctx.Message
+		// 获取用户消息处理器
+		handler, err := NewGroupMessageHandler(msg)
+		if err != nil {
+			logger.Warning(fmt.Sprintf("init group message handler error: %s", err))
+			return
+		}
+
+		// 处理用户消息
+		err = handler.handle()
+		if err != nil {
+			logger.Warning(fmt.Sprintf("handle group message error: %s", err))
+		}
+	}
+}
+
 // NewGroupMessageHandler 创建群消息处理器
 func NewGroupMessageHandler(msg *openwechat.Message) (MessageHandlerInterface, error) {
 	sender, err := msg.Sender()

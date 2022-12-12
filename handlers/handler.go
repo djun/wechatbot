@@ -35,50 +35,24 @@ func QrCodeCallBack(uuid string) {
 	}
 }
 
-// Handler 全局处理入口
-func Handler(msg *openwechat.Message) {
-	defer func() {
-		err := recover()
-		if err != nil {
-			logger.Warning(fmt.Sprintf("handler recover error: %v", err))
-		}
-	}()
+func NewHandler() (msgFunc func(msg *openwechat.Message), err error) {
+	dispatcher := openwechat.NewMessageMatchDispatcher()
 
 	// 清空会话
-	if strings.Contains(msg.Content, config.LoadConfig().SessionClearToken) {
-		// 获取口令消息处理器
-		handler, err := NewTokenMessageHandler(msg)
-		if err != nil {
-			logger.Warning(fmt.Sprintf("init token message handler error: %s", err))
-		}
-
-		// 获取口令消息处理器
-		err = handler.handle()
-		if err != nil {
-			logger.Warning(fmt.Sprintf("handle token message error: %s", err))
-		}
-		return
-	}
+	dispatcher.RegisterHandler(func(message *openwechat.Message) bool {
+		return strings.Contains(message.Content, config.LoadConfig().SessionClearToken)
+	}, TokenMessageContextHandler())
 
 	// 处理群消息
-	if msg.IsSendByGroup() {
-		// 获取用户消息处理器
-		handler, err := NewGroupMessageHandler(msg)
-		if err != nil {
-			logger.Warning(fmt.Sprintf("init group message handler error: %s", err))
-			return
-		}
-
-		// 处理用户消息
-		err = handler.handle()
-		if err != nil {
-			logger.Warning(fmt.Sprintf("handle group message error: %s", err))
-		}
-		return
-	}
+	dispatcher.RegisterHandler(func(message *openwechat.Message) bool {
+		return message.IsSendByGroup()
+	}, GroupMessageContextHandler())
 
 	// 好友申请
-	if msg.IsFriendAdd() {
+	dispatcher.RegisterHandler(func(message *openwechat.Message) bool {
+		return message.IsFriendAdd()
+	}, func(ctx *openwechat.MessageContext) {
+		msg := ctx.Message
 		if config.LoadConfig().AutoPass {
 			_, err := msg.Agree("")
 			if err != nil {
@@ -86,19 +60,12 @@ func Handler(msg *openwechat.Message) {
 				return
 			}
 		}
-	}
+	})
 
 	// 私聊
 	// 获取用户消息处理器
-	handler, err := NewUserMessageHandler(msg)
-	if err != nil {
-		logger.Warning(fmt.Sprintf("init user message handler error: %s", err))
-	}
-
-	// 处理用户消息
-	err = handler.handle()
-	if err != nil {
-		logger.Warning(fmt.Sprintf("handle user message error: %s", err))
-	}
-	return
+	dispatcher.RegisterHandler(func(message *openwechat.Message) bool {
+		return !(strings.Contains(message.Content, config.LoadConfig().SessionClearToken) || message.IsSendByGroup() || message.IsFriendAdd())
+	}, UserMessageContextHandler())
+	return openwechat.DispatchMessage(dispatcher), nil
 }

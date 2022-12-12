@@ -23,6 +23,22 @@ type UserMessageHandler struct {
 	service service.UserServiceInterface
 }
 
+func UserMessageContextHandler() func(ctx *openwechat.MessageContext) {
+	return func(ctx *openwechat.MessageContext) {
+		msg := ctx.Message
+		handler, err := NewUserMessageHandler(msg)
+		if err != nil {
+			logger.Warning(fmt.Sprintf("init user message handler error: %s", err))
+		}
+
+		// 处理用户消息
+		err = handler.handle()
+		if err != nil {
+			logger.Warning(fmt.Sprintf("handle user message error: %s", err))
+		}
+	}
+}
+
 // NewUserMessageHandler 创建私聊处理器
 func NewUserMessageHandler(message *openwechat.Message) (MessageHandlerInterface, error) {
 	sender, err := message.Sender()
