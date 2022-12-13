@@ -28,7 +28,8 @@
 
 # 常见问题
 * 如无法登录 login error: write storage.json: bad file descriptor 删除掉storage.json文件重新登录。
-* 其他无法登录问题，依然尝试删除掉storage.json文件重新登录。
+* 如无法登录 login error: wechat network error: Get "https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxnewloginpage": 301 response missing Location header 一般是微信登录权限问题，先确保PC端能否正常登录。
+* 其他无法登录问题，依然尝试删除掉storage.json文件，结束进程(linux一般是kill -9 进程id)之后重启程序，重新扫码登录，(如为docket部署，Supervisord进程管理工具会自动重启程序)。
 * ~~机器人无法正常回复，检查ApiKey能否正常使用，控制台日志中有详细错误信息~~ 新版本会机器人会直接输出，因为被问得好烦了。
 * linux中二维码无法扫描，缩小命令行功能，让二维码像素尽可能清晰。（无法从代码层面解决）
 * 机器人一直答非所问，可能因为上下文累积过多。切换不同问题时，发送指令：启动时配置的`session_clear_token`字段。会清空上下文
