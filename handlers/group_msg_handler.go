@@ -3,9 +3,9 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/869413421/wechatbot/gpt"
-	"github.com/869413421/wechatbot/pkg/logger"
-	"github.com/869413421/wechatbot/service"
+	"github.com/qingconglaixueit/wechatbot/gpt"
+	"github.com/qingconglaixueit/wechatbot/pkg/logger"
+	"github.com/qingconglaixueit/wechatbot/service"
 	"github.com/eatmoreapple/openwechat"
 	"strings"
 )

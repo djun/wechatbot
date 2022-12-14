@@ -2,8 +2,8 @@ package bootstrap
 
 import (
 	"fmt"
-	"github.com/869413421/wechatbot/handlers"
-	"github.com/869413421/wechatbot/pkg/logger"
+	"github.com/qingconglaixueit/wechatbot/handlers"
+	"github.com/qingconglaixueit/wechatbot/pkg/logger"
 	"github.com/eatmoreapple/openwechat"
 )
 
