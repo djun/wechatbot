@@ -11,7 +11,7 @@ var once sync.Once
 
 func init() {
 	once.Do(func() {
-		Logger = log.New(os.Stdout, "INFO", log.Ldate|log.Ltime|log.Lshortfile)
+		Logger = log.New(os.Stdout, "INFO", log.LstdFlags|log.Llongfile)
 	})
 }
 

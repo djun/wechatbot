@@ -3,11 +3,12 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"github.com/eatmoreapple/openwechat"
 	"github.com/qingconglaixueit/wechatbot/config"
 	"github.com/qingconglaixueit/wechatbot/gpt"
 	"github.com/qingconglaixueit/wechatbot/pkg/logger"
+	"github.com/qingconglaixueit/wechatbot/rule"
 	"github.com/qingconglaixueit/wechatbot/service"
-	"github.com/eatmoreapple/openwechat"
 	"strings"
 )
 
@@ -66,23 +67,32 @@ func (h *UserMessageHandler) handle() error {
 // ReplyText 发送文本消息到群
 func (h *UserMessageHandler) ReplyText() error {
 	logger.Info(fmt.Sprintf("Received User %v Text Msg : %v", h.sender.NickName, h.msg.Content))
+	var (
+		reply string
+		err   error
+	)
 	// 1.获取上下文，如果字符串为空不处理
 	requestText := h.getRequestText()
 	if requestText == "" {
 		logger.Info("user message is null")
 		return nil
 	}
-
-	// 2.向GPT发起请求，如果回复文本等于空,不回复
-	reply, err := gpt.Completions(h.getRequestText())
-	if err != nil {
-		// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
-		errMsg := fmt.Sprintf("gpt request error: %v", err)
-		_, err = h.msg.ReplyText(errMsg)
+	logger.Info(fmt.Sprintf("h.sender.NickName == %+v", h.sender.NickName))
+	// 只有 vip 用户才能私聊
+	if rule.Grule.InSlice(h.sender.NickName, VipUserList) {
+		// 2.向GPT发起请求，如果回复文本等于空,不回复
+		reply, err = gpt.Completions(h.getRequestText())
 		if err != nil {
-			return errors.New(fmt.Sprintf("response user error: %v ", err))
+			// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
+			errMsg := fmt.Sprintf("gpt request error: %v", err)
+			_, err = h.msg.ReplyText(errMsg)
+			if err != nil {
+				return errors.New(fmt.Sprintf("response user error: %v ", err))
+			}
+			return err
 		}
-		return err
+	} else {
+		reply = replyPersonal
 	}
 
 	// 2.设置上下文，回复用户
