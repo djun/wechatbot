@@ -144,7 +144,6 @@ func (g *GroupMessageHandler) ReplyText() error {
 		// 能服务的时候，才请求 chatgpt
 		if isSvr {
 			// 3.请求GPT获取回复
-			//reply = "干你哦！！！"
 			reply, err = gpt.Completions(requestText)
 			if err != nil {
 				// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。

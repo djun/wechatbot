@@ -20,6 +20,8 @@
 * 私聊回复前缀设置
 * 好友添加自动通过
 * 增加每天工作的起始时间和结束时间，只有在该时间段才会对外提供 chatgpt 服务
+* 增加 vip 用户在任意时段都可享受 chatgpt 服务，只需要在 \wechatbot\handlers\group_msg_handler.go 中 的 VipUserList 切片中，
+加入具体的 vip 昵称
 
 # 实现机制
 目前机器人有两种实现方式
@@ -142,7 +144,9 @@ $ go run main.go
   "model": "text-davinci-003",
   "temperature": 1,
   "reply_prefix": "来自机器人回复：",
-  "session_clear_token": "清空会话"
+  "session_clear_token": "清空会话",
+  "start_time": 9,
+  "end_time": 21
 }
 
 api_key：openai api_key

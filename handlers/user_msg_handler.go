@@ -7,7 +7,6 @@ import (
 	"github.com/qingconglaixueit/wechatbot/config"
 	"github.com/qingconglaixueit/wechatbot/gpt"
 	"github.com/qingconglaixueit/wechatbot/pkg/logger"
-	"github.com/qingconglaixueit/wechatbot/rule"
 	"github.com/qingconglaixueit/wechatbot/service"
 	"strings"
 )
@@ -79,7 +78,7 @@ func (h *UserMessageHandler) ReplyText() error {
 	}
 	logger.Info(fmt.Sprintf("h.sender.NickName == %+v", h.sender.NickName))
 	// 只有 vip 用户才能私聊
-	if rule.Grule.InSlice(h.sender.NickName, VipUserList) {
+	//if rule.Grule.InSlice(h.sender.NickName, VipUserList) {
 		// 2.向GPT发起请求，如果回复文本等于空,不回复
 		reply, err = gpt.Completions(h.getRequestText())
 		if err != nil {
@@ -91,9 +90,9 @@ func (h *UserMessageHandler) ReplyText() error {
 			}
 			return err
 		}
-	} else {
-		reply = replyPersonal
-	}
+	//} else {
+	//	reply = replyPersonal
+	//}
 
 	// 2.设置上下文，回复用户
 	h.service.SetUserSessionContext(requestText, reply)
