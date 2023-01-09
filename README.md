@@ -6,9 +6,6 @@
 
 > `友链：`[chatgpt-dingtalk](https://github.com/eryajf/chatgpt-dingtalk) 本项目可以将GPT机器人集成到钉钉群聊中。
 
-[![Release](https://img.shields.io/github/v/release/869413421/wechatbot.svg?style=flat-square)](https://github.com/869413421/wechatbot/releases/tag/v1.1.3)
-![Github stars](https://img.shields.io/github/stars/869413421/wechatbot.svg)
-![Forks](https://img.shields.io/github/forks/869413421/wechatbot.svg?style=flat-square)
 
 ### 目前实现了以下功能
 
@@ -18,10 +15,10 @@
 * 机器人群聊@回复
 * 机器人私聊回复
 * 私聊回复前缀设置
-* 好友添加自动通过
-* 增加每天工作的起始时间和结束时间，只有在该时间段才会对外提供 chatgpt 服务
-* 增加 vip 用户在任意时段都可享受 chatgpt 服务，只需要在 \wechatbot\handlers\group_msg_handler.go 中 的 VipUserList 切片中，
-加入具体的 vip 昵称
+* 好友添加自动通过可配置
+* ~~增加每天工作的起始时间和结束时间，只有在该时间段才会对外提供 chatgpt 服务~~
+* ~~增加 vip 用户在任意时段都可享受 chatgpt 服务，只需要在 \wechatbot\handlers\group_msg_handler.go 中 的 VipUserList 切片中，
+加入具体的 vip 昵称~~
 
 # 实现机制
 目前机器人有两种实现方式
@@ -42,6 +39,7 @@
 
 > * ~~目前只支持在windows上运行因为需要弹窗扫码登录微信，后续会支持linux~~   已支持
 > * 有openai账号，并且创建好api_key，注册事项可以参考[此文章](https://juejin.cn/post/7173447848292253704) 。
+> * 应用可以参考这篇文章 [此文章](https://juejin.cn/post/7176813187705077816) 。
 > * 微信必须实名认证。
 
 # 注意事项
@@ -144,9 +142,7 @@ $ go run main.go
   "model": "text-davinci-003",
   "temperature": 1,
   "reply_prefix": "来自机器人回复：",
-  "session_clear_token": "清空会话",
-  "start_time": 9,
-  "end_time": 21
+  "session_clear_token": "清空会话"
 }
 
 api_key：openai api_key

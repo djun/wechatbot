@@ -29,10 +29,6 @@ type Configuration struct {
 	ReplyPrefix string `json:"reply_prefix"`
 	// 清空会话口令
 	SessionClearToken string `json:"session_clear_token"`
-	// 每天工作起始时间
-	StartTime int `json:"start_time"`
-	// 每天工作结束时间
-	EndTime int `json:"end_time"`
 }
 
 var config *Configuration
@@ -49,8 +45,6 @@ func LoadConfig() *Configuration {
 			Model:             "text-davinci-003",
 			Temperature:       0.9,
 			SessionClearToken: "下一个问题",
-			StartTime:         9,
-			EndTime:           21,
 		}
 
 		// 判断配置文件是否存在，存在直接JSON读取
@@ -78,8 +72,6 @@ func LoadConfig() *Configuration {
 		Temperature := os.Getenv("TEMPREATURE")
 		ReplyPrefix := os.Getenv("REPLY_PREFIX")
 		SessionClearToken := os.Getenv("SESSION_CLEAR_TOKEN")
-		StartTime := os.Getenv("START_TIME")
-		EndTime := os.Getenv("END_TIME")
 		if ApiKey != "" {
 			config.ApiKey = ApiKey
 		}
@@ -118,24 +110,6 @@ func LoadConfig() *Configuration {
 		}
 		if SessionClearToken != "" {
 			config.SessionClearToken = SessionClearToken
-		}
-
-		if StartTime != "" {
-			sTime, err := strconv.Atoi(StartTime)
-			if err != nil {
-				logger.Warning("StartTime=%s  strconv.Atoi error:%+v",StartTime,err)
-			}else{
-				config.StartTime = sTime
-			}
-		}
-
-		if EndTime != "" {
-			eTime, err := strconv.Atoi(EndTime)
-			if err != nil {
-				logger.Warning("EndTime=%s  strconv.Atoi error:%+v",EndTime,err)
-			}else{
-				config.EndTime = eTime
-			}
 		}
 
 	})

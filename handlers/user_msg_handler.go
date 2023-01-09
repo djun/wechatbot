@@ -77,22 +77,17 @@ func (h *UserMessageHandler) ReplyText() error {
 		return nil
 	}
 	logger.Info(fmt.Sprintf("h.sender.NickName == %+v", h.sender.NickName))
-	// 只有 vip 用户才能私聊
-	//if rule.Grule.InSlice(h.sender.NickName, VipUserList) {
-		// 2.向GPT发起请求，如果回复文本等于空,不回复
-		reply, err = gpt.Completions(h.getRequestText())
+	// 2.向GPT发起请求，如果回复文本等于空,不回复
+	reply, err = gpt.Completions(h.getRequestText())
+	if err != nil {
+		// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
+		errMsg := fmt.Sprintf("gpt request error: %v", err)
+		_, err = h.msg.ReplyText(errMsg)
 		if err != nil {
-			// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
-			errMsg := fmt.Sprintf("gpt request error: %v", err)
-			_, err = h.msg.ReplyText(errMsg)
-			if err != nil {
-				return errors.New(fmt.Sprintf("response user error: %v ", err))
-			}
-			return err
+			return errors.New(fmt.Sprintf("response user error: %v ", err))
 		}
-	//} else {
-	//	reply = replyPersonal
-	//}
+		return err
+	}
 
 	// 2.设置上下文，回复用户
 	h.service.SetUserSessionContext(requestText, reply)

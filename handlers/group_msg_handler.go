@@ -4,30 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/eatmoreapple/openwechat"
-	"github.com/qingconglaixueit/wechatbot/config"
 	"github.com/qingconglaixueit/wechatbot/gpt"
 	"github.com/qingconglaixueit/wechatbot/pkg/logger"
-	"github.com/qingconglaixueit/wechatbot/rule"
 	"github.com/qingconglaixueit/wechatbot/service"
 	"strings"
 )
 
-const (
-	HaveARest = "该休息了"
-	WorkStr   = "起来嗨"
-	WorkTime  = "你的工作时间"
-
-	replyForRest = "好的，我开始睡美容觉了！"
-	replyForWork = "主人，我现在活力满满！"
-
-	replyForRest2 = "我已经休息了，你也快睡觉吧！"
-
-	replyPersonal = "不要单独聊我哦，可以到群里互动哦！！"
-
-	replyWorkTime = "我的工作时间是 %d 点 -- %d 点"
-)
-
-var VipUserList = []string{"xxx", "xxx"}
 var _ MessageHandlerInterface = (*GroupMessageHandler)(nil)
 
 // GroupMessageHandler 群消息处理
@@ -113,52 +95,17 @@ func (g *GroupMessageHandler) ReplyText() error {
 		logger.Info("user message is null")
 		return nil
 	}
-	logger.Info(fmt.Sprintf("fromname:%s requestText == %+v", g.sender.NickName, requestText))
 
-	if requestText == WorkTime {
-		reply = fmt.Sprintf(replyWorkTime, config.LoadConfig().StartTime, config.LoadConfig().EndTime)
-	}
-
-	// 识别到是 Anonymous 发送过来的消息，且是 “该休息了！”，那么则将全局变量设置为 false，休息状态
-	if rule.Grule.InSlice(g.sender.NickName, VipUserList) && requestText == HaveARest {
-		rule.Grule.SetWork(false)
-		reply = replyForRest
-	}
-	if rule.Grule.InSlice(g.sender.NickName, VipUserList) && requestText == WorkStr {
-		rule.Grule.SetWork(true)
-		reply = replyForWork
-	}
-
-	if rule.Grule.GetWork() && reply == "" {
-		isSvr := true
-		if !rule.Grule.IsWorkTime(config.LoadConfig().StartTime, config.LoadConfig().EndTime) {
-			isSvr = false
-			reply = replyForRest2
+	// 3.请求GPT获取回复
+	reply, err = gpt.Completions(requestText)
+	if err != nil {
+		// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
+		errMsg := fmt.Sprintf("gpt request error: %v", err)
+		_, err = g.msg.ReplyText(errMsg)
+		if err != nil {
+			return errors.New(fmt.Sprintf("response group error: %v ", err))
 		}
-		// 非工作时间，仍然服务 vip 用户
-		if !rule.Grule.IsWorkTime(config.LoadConfig().StartTime, config.LoadConfig().EndTime) &&
-			rule.Grule.InSlice(g.sender.NickName, VipUserList) {
-			isSvr = true
-			reply = ""
-		}
-		// 能服务的时候，才请求 chatgpt
-		if isSvr {
-			// 3.请求GPT获取回复
-			reply, err = gpt.Completions(requestText)
-			if err != nil {
-				// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
-				errMsg := fmt.Sprintf("gpt request error: %v", err)
-				_, err = g.msg.ReplyText(errMsg)
-				if err != nil {
-					return errors.New(fmt.Sprintf("response group error: %v ", err))
-				}
-				return err
-			}
-		}
-	} else {
-		if reply == "" {
-			reply = replyForRest2
-		}
+		return err
 	}
 
 	// 4.设置上下文，并响应信息给用户
@@ -178,8 +125,6 @@ func (g *GroupMessageHandler) getRequestText() string {
 	requestText := strings.TrimSpace(g.msg.Content)
 	requestText = strings.Trim(g.msg.Content, "\n")
 
-	logger.Info(fmt.Sprintf("xxxxxxxxxxxxxxxx -- fromname:%s requestText == %+v", g.sender.NickName, requestText))
-
 	// 2.替换掉当前用户名称
 	replaceText := "@" + g.self.NickName
 	requestText = strings.TrimSpace(strings.ReplaceAll(g.msg.Content, replaceText, ""))
@@ -187,16 +132,7 @@ func (g *GroupMessageHandler) getRequestText() string {
 		return ""
 	}
 
-	logger.Info(fmt.Sprintf("xxxxxxxxxxxxxxxx22 -- fromname:%s requestText==%+v", g.sender.NickName, requestText))
-
-	if requestText == WorkTime {
-		return requestText
-	}
-	if (requestText == WorkStr || requestText == HaveARest) && rule.Grule.InSlice(g.sender.NickName, VipUserList){
-		return requestText
-	}
-
-		// 3.获取上下文，拼接在一起，如果字符长度超出4000，截取为4000。（GPT按字符长度算），达芬奇3最大为4068，也许后续为了适应要动态进行判断。
+	// 3.获取上下文，拼接在一起，如果字符长度超出4000，截取为4000。（GPT按字符长度算），达芬奇3最大为4068，也许后续为了适应要动态进行判断。
 	sessionText := g.service.GetUserSessionContext()
 	if sessionText != "" {
 		requestText = sessionText + "\n" + requestText
