@@ -15,6 +15,7 @@ type UserMessageHandler struct {
 
 // handle 处理消息
 func (g *UserMessageHandler) handle(msg *openwechat.Message) error {
+
 	if msg.IsText() {
 		return g.ReplyText(msg)
 	}
@@ -31,6 +32,12 @@ func (g *UserMessageHandler) ReplyText(msg *openwechat.Message) error {
 	// 接收私聊消息
 	sender, err := msg.Sender()
 	log.Printf("Received User %v Text Msg : %v", sender.NickName, msg.Content)
+
+	
+	if !strings.Contains(config.LoadConfig().AutoReplyFriends,";"+sender.NickName+";") {
+		log.Printf("不在关注好友列表，不做回复: %v %v \n", sender.NickName, msg.Content)
+		return nil
+	}
 
 	// 向GPT发起请求
 	requestText := strings.TrimSpace(msg.Content)

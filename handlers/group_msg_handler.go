@@ -38,6 +38,11 @@ func (g *GroupMessageHandler) ReplyText(msg *openwechat.Message) error {
 		return nil
 	}
 
+	if !strings.Contains(config.LoadConfig().AutoReplyGroups,";"+group.NickName+";") {
+		log.Printf("不在关注群列表，不做回复: %v %v \n", group.NickName, msg.Content)
+		return nil
+	}
+
 	// 替换掉@文本，然后向GPT发起请求
 	replaceText := "@" + sender.Self.NickName
 	requestText := strings.TrimSpace(strings.ReplaceAll(msg.Content, replaceText, ""))
