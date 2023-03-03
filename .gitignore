@@ -5,6 +5,8 @@
 *.so
 *.dylib
 .idea/
+.vscode/
+wechatbot
 storage.json
 
 # Test binary, built with `go test -c`
@@ -15,3 +17,4 @@ storage.json
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+/config.json
