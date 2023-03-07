@@ -13,6 +13,8 @@ type Configuration struct {
 	ApiKey string `json:"api_key"`
 	// 自动通过好友
 	AutoPass bool `json:"auto_pass"`
+	//代理地址
+	Proxy string `json:"proxy"`
 }
 
 var config *Configuration
