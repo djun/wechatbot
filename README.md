@@ -12,7 +12,7 @@ chatGPT注册可以参考[这里](https://juejin.cn/post/7173447848292253704)
 # 安装使用
 ````
 # 获取项目
-git clone https://github.com/869413421/wechatbot.git
+git clone https://github.com/djun/wechatbot.git
 
 # 进入项目目录
 cd wechatbot
