@@ -3,10 +3,12 @@ package gtp
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/869413421/wechatbot/config"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+
+	"github.com/869413421/wechatbot/config"
 )
 
 const BASEURL = "https://api.openai.com/v1/"
@@ -65,6 +67,20 @@ func Completions(msg string) (string, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	client := &http.Client{}
+
+	httpProxy := config.LoadConfig().ProxyURL
+	if httpProxy != "" {
+		uri, err := url.Parse(httpProxy)
+		if err != nil {
+			return "", err
+		}
+		client = &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyURL(uri),
+			},
+		}
+	}
+
 	response, err := client.Do(req)
 	if err != nil {
 		return "", err
