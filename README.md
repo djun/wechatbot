@@ -18,7 +18,7 @@ git clone https://github.com/869413421/wechatbot.git
 cd wechatbot
 
 # 复制配置文件
-copy config.dev.json config.json
+cp config.dev.json config.json
 
 # 启动项目
 go run main.go
