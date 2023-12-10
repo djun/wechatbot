@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  wechatbot:
+    build:
+      context: "."
+    container_name: "wechatbot"
+    network_mode: "bridge"
+    volumes:
+      - "/etc/localtime:/etc/localtime"
+      - "/volume1/docker/container/wechatbot/config.json:/work/config.json" # 按需填写
