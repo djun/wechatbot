@@ -1,12 +1,11 @@
 package bootstrap
 
 import (
-	"github.com/869413421/wechatbot/handlers"
 	"github.com/eatmoreapple/openwechat"
+	"io"
 	"log"
+	"wechatbot/handlers"
 )
-
-
 
 func Run() {
 	//bot := openwechat.DefaultBot()
@@ -18,9 +17,17 @@ func Run() {
 	bot.UUIDCallback = openwechat.PrintlnQrcodeUrl
 
 	// 创建热存储容器对象
-	reloadStorage := openwechat.NewJsonFileHotReloadStorage("storage.json")
+	reloadStorage := openwechat.NewFileHotReloadStorage("storage.json")
+
+	defer func(reloadStorage io.ReadWriteCloser) {
+		err := reloadStorage.Close()
+		if err != nil {
+			log.Printf("storage.json close error: %v \n", err)
+		}
+	}(reloadStorage)
+
 	// 执行热登录
-	err := bot.HotLogin(reloadStorage)
+	err := bot.HotLogin(reloadStorage, openwechat.NewRetryLoginOption())
 	if err != nil {
 		if err = bot.Login(); err != nil {
 			log.Printf("login error: %v \n", err)

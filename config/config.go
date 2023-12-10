@@ -13,6 +13,8 @@ type Configuration struct {
 	ApiKey string `json:"api_key"`
 	// 自动通过好友
 	AutoPass bool `json:"auto_pass"`
+	// gpt 版本
+	GptModel string `json:"gpt_model"`
 }
 
 var config *Configuration
@@ -39,11 +41,15 @@ func LoadConfig() *Configuration {
 		// 如果环境变量有配置，读取环境变量
 		ApiKey := os.Getenv("ApiKey")
 		AutoPass := os.Getenv("AutoPass")
+		GptModel := os.Getenv("GptModel")
 		if ApiKey != "" {
 			config.ApiKey = ApiKey
 		}
 		if AutoPass == "true" {
 			config.AutoPass = true
+		}
+		if AutoPass != "" {
+			config.GptModel = GptModel
 		}
 	})
 	return config

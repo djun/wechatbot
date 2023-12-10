@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"github.com/869413421/wechatbot/gtp"
 	"github.com/eatmoreapple/openwechat"
 	"log"
 	"strings"
+	"wechatbot/gtp"
 )
 
 var _ MessageHandlerInterface = (*UserMessageHandler)(nil)
