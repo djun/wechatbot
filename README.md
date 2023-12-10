@@ -24,3 +24,20 @@ copy config.dev.json config.json
 go run main.go
 
 启动前需替换config中的api_key
+````
+
+# docker 部署
+
+> - 注意修改 docker-compose.yml 文件中 config.json 挂载地址
+> - 可在 Dockerfile 中增加代理地址，以此来访问 https://api.openai.com
+
+```shell
+# 获取项目
+git clone https://github.com/869413421/wechatbot.git
+
+# 进入项目目录
+cd wechatbot
+
+# docker-compose 启动
+docker-compose up -d
+```

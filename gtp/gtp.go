@@ -3,52 +3,68 @@ package gtp
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/869413421/wechatbot/config"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"wechatbot/config"
 )
 
-const BASEURL = "https://api.openai.com/v1/"
+type Role int
 
-// ChatGPTResponseBody 请求体
+const (
+	User      Role = iota // User = 0
+	System                // System = 1
+	Assistant             // Assistant = 2
+)
+
+func (r Role) String() string {
+	return []string{"user", "system", "assistant"}[r]
+}
+
+const BASEURL = "https://api.openai.com/v1/chat/"
+
+// ChatGPTResponseBody 响应体
 type ChatGPTResponseBody struct {
-	ID      string                   `json:"id"`
-	Object  string                   `json:"object"`
-	Created int                      `json:"created"`
-	Model   string                   `json:"model"`
-	Choices []map[string]interface{} `json:"choices"`
-	Usage   map[string]interface{}   `json:"usage"`
+	ID      string                 `json:"id"`
+	Object  string                 `json:"object"`
+	Created int                    `json:"created"`
+	Model   string                 `json:"model"`
+	Choices []ChoiceItem           `json:"choices"`
+	Usage   map[string]interface{} `json:"usage"`
 }
 
 type ChoiceItem struct {
+	Index        int         `json:"index"`
+	Message      MessageItem `json:"message"`
+	FinishReason string      `json:"finish_reason"`
 }
 
-// ChatGPTRequestBody 响应体
+type MessageItem struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+// ChatGPTRequestBody 请求体
 type ChatGPTRequestBody struct {
-	Model            string  `json:"model"`
-	Prompt           string  `json:"prompt"`
-	MaxTokens        int     `json:"max_tokens"`
-	Temperature      float32 `json:"temperature"`
-	TopP             int     `json:"top_p"`
-	FrequencyPenalty int     `json:"frequency_penalty"`
-	PresencePenalty  int     `json:"presence_penalty"`
+	Model    string        `json:"model"`
+	Messages []MessageItem `json:"messages"`
 }
 
 // Completions gtp文本模型回复
-//curl https://api.openai.com/v1/completions
-//-H "Content-Type: application/json"
-//-H "Authorization: Bearer your chatGPT key"
-//-d '{"model": "text-davinci-003", "prompt": "give me good song", "temperature": 0, "max_tokens": 7}'
+// curl https://api.openai.com/v1/chat/completions
+// -H "Content-Type: application/json"
+// -H "Authorization: Bearer your chatGPT key"
+// -d '{"model": "gpt-3.5-turbo", "messages: [{"role": "user", "content": "your problem"}]"}'
 func Completions(msg string) (string, error) {
+	gptModel := config.LoadConfig().GptModel
 	requestBody := ChatGPTRequestBody{
-		Model:            "text-davinci-003",
-		Prompt:           msg,
-		MaxTokens:        2048,
-		Temperature:      0.7,
-		TopP:             1,
-		FrequencyPenalty: 0,
-		PresencePenalty:  0,
+		Model: gptModel,
+		Messages: []MessageItem{
+			{
+				Role:    Role(0).String(),
+				Content: msg,
+			},
+		},
 	}
 	requestData, err := json.Marshal(requestBody)
 
@@ -82,12 +98,10 @@ func Completions(msg string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var reply string
-	if len(gptResponseBody.Choices) > 0 {
-		for _, v := range gptResponseBody.Choices {
-			reply = v["text"].(string)
-			break
-		}
+	reply := "暂无回复"
+	choicesLength := len(gptResponseBody.Choices)
+	if choicesLength > 0 {
+		reply = gptResponseBody.Choices[choicesLength-1].Message.Content
 	}
 	log.Printf("gpt response text: %s \n", reply)
 	return reply, nil
